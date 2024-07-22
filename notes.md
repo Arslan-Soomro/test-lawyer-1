@@ -1,0 +1,3 @@
+- Simple RAG does not work as good, the optimal number of top chunks to retrieve should be 10, since the most helpful chunks are actually in between rather than the most similar chunks.
+- A reranker is a must to not only get the most relevant chunks but to also remove chunks that might not help but also cause hallucinations.
+- If chunking is improved we could get more complete chunks/answers in the most relevant chunks selected by the reranker
