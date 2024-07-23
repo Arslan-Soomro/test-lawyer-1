@@ -1,5 +1,7 @@
 python-dotenv
 requests
 langchain
+langchain-experimental
 langchain-pinecone
 langchain-voyageai
+dsrag

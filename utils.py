@@ -59,8 +59,13 @@ def generate_embeddings(texts, max_list_length=128):
         return {"error": str(err)}
 
 
-def upsert_to_pinecone(vectors, max_list_length=100):
+def upsert_to_pinecone(vectors, namespace, max_list_length=100):
     try:
+
+        if not namespace:
+            raise Exception(
+                "Please provide a namespace for upserting to Pinecone.")
+
         pinecone_api_key = os.getenv("PINECONE_API_KEY")
         pinecone_api_url = "https://kb2-cen1257.svc.aped-4627-b74a.pinecone.io/vectors/upsert"
         # batches_num = math.ceil(len(vectors) / max_list_length)
@@ -73,7 +78,8 @@ def upsert_to_pinecone(vectors, max_list_length=100):
                     "Content-Type": "application/json",
                     "Api-Key": pinecone_api_key
                 },
-                data=json.dumps({"vectors": input_vectors})
+                data=json.dumps(
+                    {"vectors": input_vectors, "namespace": namespace})
             )
             data = response.json()
 
@@ -84,7 +90,7 @@ def upsert_to_pinecone(vectors, max_list_length=100):
         return False
 
 
-def embed_and_upsert(texts):
+def embed_and_upsert(texts, namespace):
     embeddings = generate_embeddings(texts)
     if "error" in embeddings:
         print("[error@embed_and_upsert]: Failed to get embeddings")
@@ -99,11 +105,11 @@ def embed_and_upsert(texts):
         for index, (text_chunk, embedding) in enumerate(zip(texts, embeddings))
     ]
 
-    success = upsert_to_pinecone(vectors)
+    success = upsert_to_pinecone(vectors, namespace)
     return success
 
 
-def reset_pinecone():
+def reset_pinecone(namespace):
     pinecone_api_key = os.getenv("PINECONE_API_KEY")
     pinecone_api_url = "https://kb2-cen1257.svc.aped-4627-b74a.pinecone.io/vectors/delete"
     response = requests.post(
@@ -113,14 +119,15 @@ def reset_pinecone():
             "Api-Key": pinecone_api_key
         },
         data=json.dumps({
-            "deleteAll": True
+            "deleteAll": True,
+            "namespace": namespace
         })
     )
     data = response.json()
     return data
 
 
-def get_relevant_chunks(text, top_k=10, only_text=False):
+def get_relevant_chunks(text, namespace, top_k=10, only_text=False):
     pinecone_api_key = os.getenv("PINECONE_API_KEY")
     pinecone_api_url = "https://kb2-cen1257.svc.aped-4627-b74a.pinecone.io/query"
     embeddings = generate_embeddings([text])
@@ -135,6 +142,7 @@ def get_relevant_chunks(text, top_k=10, only_text=False):
             "vector": embeddings[0],
             "topK": top_k,
             "includeMetadata": True,
+            "namespace": namespace
         })
     )
     data = response.json()
