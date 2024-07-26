@@ -4,4 +4,7 @@ langchain
 langchain-experimental
 langchain-pinecone
 langchain-voyageai
+langchain-anthropic
 dsrag
+tiktoken
+streamlit

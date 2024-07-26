@@ -3,6 +3,7 @@ import os
 import requests
 import json
 import math
+import tiktoken
 from dotenv import load_dotenv, dotenv_values
 load_dotenv()
 
@@ -26,10 +27,17 @@ def clean_text(text):
     return text
 
 
-def generate_embeddings(texts, max_list_length=128):
+def count_tokens(text):
+    enc = tiktoken.get_encoding("cl100k_base")
+    return len(enc.encode(text))
+
+
+def generate_embeddings(texts, max_list_length=128):  # 128 is max length by voyage
     try:
         voyageai_api_key = os.getenv("VOYAGE_API_KEY")
         voyageai_api_url = "https://api.voyageai.com/v1/embeddings"
+        # 120000 is max token limit by voyage, -1000 for safety
+        max_token_limit = 120000 - 10000
 
         if not voyageai_api_key:
             raise Exception(
@@ -37,9 +45,31 @@ def generate_embeddings(texts, max_list_length=128):
 
         embeddings = []
         batches_num = math.ceil(len(texts) / max_list_length)
+        
+        # Prepare the batches every batch should contain max_list_length texts, and should not exceed max_token_limit
+        batches = []
+        batch_loop_idx = 0  # Initialize the outer loop index
+        while batch_loop_idx < len(texts):
+            batch_token_count = 0
+            new_batch = []
+            count = 0
+            while batch_loop_idx < len(texts) and count < max_list_length and batch_token_count + count_tokens(texts[batch_loop_idx]) <= max_token_limit:
+                # Check if adding the next text would exceed the max token limit or max list length
+                new_batch.append(texts[batch_loop_idx]) 
+                batch_token_count += count_tokens(texts[batch_loop_idx])
+                count += 1
+                batch_loop_idx += 1 
+            # print(batch_token_count)
+            batches.append(new_batch)
 
-        for i in range(0, len(texts), max_list_length):
-            input_texts = texts[i:i + max_list_length]
+        # Check if the last batch is empty
+        if batches and not batches[-1]:
+            batches.pop()  # Remove the empty batch
+
+
+        # Send the batches to the VoyageAI API, and get Embeddings
+        for i in range(len(batches)):
+            input_texts = batches[i]
             response = requests.post(
                 voyageai_api_url,
                 headers={
@@ -50,6 +80,8 @@ def generate_embeddings(texts, max_list_length=128):
                     {"input": input_texts, "model": "voyage-large-2"})
             )
             data = response.json()
+            if (data.get("detail", False)):
+                raise Exception(data["detail"])
             input_embeddings = [item['embedding'] for item in data['data']]
             embeddings.extend(input_embeddings)
 
