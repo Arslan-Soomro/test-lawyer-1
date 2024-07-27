@@ -48,7 +48,12 @@ def ask_legal_assistant(query, chat_history):
     ))
 
     print("Answer: \n\n", get_answer_res)
-    return get_answer_res.content
+    # return get_answer_res.content
+    return {
+        "rephrased_query": rephrased_query,
+        "relevant_chunks": [c["text"] for c in most_relevant_chunks],
+        "answer": get_answer_res.content,
+    }
 
 """
 ask_legal_assistant("what challenges are faced by them", [{

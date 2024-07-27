@@ -14,17 +14,20 @@ for message in st.session_state.messages:
 
 if user_input := st.chat_input("Type your question"):
     # Display user message in chat message container
-    with st.chat_message("user"):
+    with st.chat_message("human"):
         st.markdown(user_input)
     # Add user message to chat history
-    st.session_state.messages.append({"role": "user", "content": user_input})
+    st.session_state.messages.append({"role": "human", "content": user_input})
     # print(st.session_state.messages[0:-1])
     # print(st.session_state.messages[-1])
     response = ask_legal_assistant(
         st.session_state.messages[-1]["content"], st.session_state.messages[0:-1])
     # Display assistant response in chat message container
-    with st.chat_message("assistant"):
-        st.markdown(response)
+    with st.chat_message("ai"):
+        st.markdown(response["answer"])
+
+    with st.expander("See Response JSON"):
+        st.json(response)
     # Add assistant response to chat history
     st.session_state.messages.append(
-        {"role": "assistant", "content": response})
+        {"role": "ai", "content": response})
