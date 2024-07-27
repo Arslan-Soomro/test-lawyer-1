@@ -5,13 +5,13 @@ from utils import get_relevant_chunks, rerank_chunks, print_chunks
 
 def ask_legal_assistant(query, chat_history):
     model = ChatAnthropic(model="claude-3-sonnet-20240229")
-    pinecone_namespace = "simple-rag-2"
+    pinecone_namespace = "simple-rag-2-he"
 
     # Repharse query as a standalone question
     repharse_query_template = [
         ("system",
-         "Given the following conversation, repharase the followup question to be a standalone question, that is understandable and optimized for similarity search while preserving the meaning. The output should just be the rephrased question \n Chat History: \n {chat_history}"),
-        ("human", "followup: \n {question}")
+         "בהתחשב בשיחה הבאה, נסח מחדש את שאלת ההמשך כך שתהיה שאלה עצמאית, שהיא מובנת ומותאמת לחיפוש דמיון תוך שמירה על המשמעות. הפלט צריך להיות רק השאלה המנוסחת מחדש \n היסטוריית צ'אט: \n {chat_history}"),
+        ("human", "מעקב: \n {question}")
     ]
     rephrase_query_prompt = ChatPromptTemplate.from_messages(
         repharse_query_template)
@@ -33,9 +33,9 @@ def ask_legal_assistant(query, chat_history):
 
     # Get the Actual Answer from LLM
     get_answer_template = [
-        ("system", "You are a legal assistant, you are given some knowledge about the topic, and a question. You must answer user's question only if its evident from the knowledge, If you cannot find or extract enough knowledge, let the user know that as per your limited knowledge you are not sure and won't be able to answer them"),
+        ("system", "אתה עוזר משפטי, אתה מקבל קצת ידע על הנושא ושאלה. עליך לענות על שאלת המשתמש רק אם זה ברור מהידע, אם אינך יכול למצוא או לחלץ מספיק ידע, הודע למשתמש כי לפי הידע המוגבלת שלך אינך בטוח ולא תוכל לענות עליהם"),
         ("human",
-         "Knowledge is made up of top text chunks in order, acquired after performing a similarity search in the knowledge base for user's query \n Knowledge: \n {relevant_chunks} \n question: {question}")
+         "הידע מורכב מחלקי טקסט עליונים לפי הסדר, הנרכשים לאחר ביצוע חיפוש דמיון במאגר הידע עבור שאילתת המשתמש \n ידע: \n {relevant_chunks} \n שְׁאֵלָה: {question}")
     ]
     get_answer_prompt = ChatPromptTemplate.from_messages(get_answer_template)
     print("Prompt: \n\n", get_answer_prompt.format(

@@ -5,14 +5,24 @@ from app_utils import ask_legal_assistant
 if "messages" not in st.session_state:
     st.session_state.messages = [{
         "role": "ai",
-        "content": "Hi, how can I help you?"
+        "content": "הי איך אני יכול לעזור לך?"
     }]
+
+st.markdown("""
+<style>
+body, html {
+    direction: RTL;
+    unicode-bidi: bidi-override;
+    text-align: right;
+}
+</style>
+""", unsafe_allow_html=True)
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if user_input := st.chat_input("Type your question"):
+if user_input := st.chat_input("הקלד את השאלה שלך"):
     # Display user message in chat message container
     with st.chat_message("human"):
         st.markdown(user_input)
