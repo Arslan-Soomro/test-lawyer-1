@@ -40,4 +40,4 @@ if user_input := st.chat_input("הקלד את השאלה שלך"):
         st.json(response)
     # Add assistant response to chat history
     st.session_state.messages.append(
-        {"role": "ai", "content": response})
+        {"role": "ai", "content": response["answer"]})
