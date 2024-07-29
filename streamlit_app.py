@@ -21,7 +21,7 @@ body, html {
 
 with st.expander("Custom Prompt"):
     custom_prompt = st.text_area(
-        "Custom Prompt",
+        "Custom QA Prompt",
         default_qa_prompt
     )
 
