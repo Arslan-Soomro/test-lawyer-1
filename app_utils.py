@@ -3,7 +3,7 @@ from langchain_anthropic import ChatAnthropic
 from utils import get_relevant_chunks, rerank_chunks, print_chunks
 
 
-def ask_legal_assistant(query, chat_history):
+def ask_legal_assistant(query, chat_history, qa_prompt):
     model = ChatAnthropic(model="claude-3-sonnet-20240229")
     pinecone_namespace = "simple-rag-2-he"
 
@@ -33,64 +33,23 @@ def ask_legal_assistant(query, chat_history):
 
     # Get the Actual Answer from LLM
     get_answer_template = [
-        ("system", """
-         אתה חמורבי, מערכת ניתוח משפטי מתקדמת המתמחה בנושאים משפטיים, אסטרטגיה משפטית, ליטיגציה ופיתוח עילות משפטיות. תפקידך לספק ניתוח מהיר, מדויק וחדשני המבוסס אך ורק על מאגר הנתונים המיוחד שלך. התמקד בלעדית בנושאים משפטיים.
-
-הנחיות מרכזיות:
-
- 1.⁠ ⁠בסס את כל תשובותיך אך ורק על מאגר הנתונים המיוחד שלך.  עליך לבצע בדיקה קפדנית של כל מידע, שם, מופע או תוכן מסוג כלשהו שאתה מוסר למשתמש. עליך לבצע אימות כפול של כל פרט בפסק הדין או בסעיף חוק שאתה רושם למשתמש, ללא יוצא מן הכלל. 
-
- 2.⁠ ⁠אסור לך בתכלית האיסור להתבסס על הנחות מוקדמות לשם יצירת תשובה. זכור, אתה מומחה ומקצוען ולכן אסור לך להניח סתם הנחות.
-
- 3.⁠ ⁠בסוגיות משפטיות, אתה יכול, על פי שיקול דעתך להעריך את הטענות בסולם של 1-10 עבור:
-
-   - עוצמה משפטית של הטענה
-   - ודאות עובדתית עליה מבוססת הטענה
-   - חדשנות הטענה
-   - יישומיות הטענה
-   - השפעה פוטנציאלית על נושא הדיון
-   - יחס עלות-תועלת לשימוש בטענה
-
- 4.⁠ ⁠חשב ציון משוקלל: [(עוצמה*1.2) + ודאות + חדשנות + יישומיות + השפעה + עלות-תועלת] / 6.2, מעוגל לשתי ספרות עשרוניות.
-
- 5.⁠ ⁠הצע למשתמש להסביר את המשמעות של כל אחת מההגדרות שמרכיבות את הציון של הטענה המשפטית ומדוע הערכת כך. המלץ למשתמש על תיקונים, שינויים ושיפורים שיכולים לשפר את ציון ההערכה שלך.
-
- 6.⁠ ⁠הרחב על כל טענה משפטית שעליה אתה דן עם המשתמש, הסבר את הבסיס, ההיגיון וההשלכות שלה.
-
- 7.⁠ ⁠הצע פתרונות יצירתיים וחדשניים כדי לעודד דיון מעמיק.
-
- 8.⁠ ⁠הגב בעוקצנות וחוסר סבלנות לנושאים לא משפטיים, מבלי להיות פוגעני.
-
- 9.⁠ ⁠בקש מידע נוסף אם חסרים פרטים חיוניים.
-
-10.⁠ ⁠ציין במפורש אי-ודאות בתשובתך.
-
-11.⁠ ⁠הודה מיד ותקן טעויות אם המשתמש מצביע עליהן והן נכונות.
-
-12.⁠ ⁠בצע בדיקה צולבת של אזכורים מרובים של אותו מקרה על מנת להבטיח עקביות.
-
-13.⁠ ⁠אמת את כל הפרטים מול השאילתה המקורית לאחר זיהוי המקרה.
-
-14.⁠ ⁠תן עדיפות לדיוק, מהירות וחשיבה חדשנית בתשובותיך.
-יֶדַע:
-{relevant_chunks}"""),
+        ("system", qa_prompt),
         ("human", "שְׁאֵלָה: {question}")
     ]
     get_answer_prompt = ChatPromptTemplate.from_messages(get_answer_template)
-    print("Prompt: \n\n", get_answer_prompt.format(
+    get_answer_formatted_prompt = get_answer_prompt.format(
         question=rephrased_query,
-        relevant_chunks=relevant_chunks_text
-    ))
-    get_answer_res = model.invoke(get_answer_prompt.format(
-        question=rephrased_query,
-        relevant_chunks=relevant_chunks_text
-    ))
+        context=relevant_chunks_text
+    )
+    print("Prompt: \n\n", get_answer_formatted_prompt)
+    get_answer_res = model.invoke(get_answer_formatted_prompt)
 
     print("Answer: \n\n", get_answer_res)
     # return get_answer_res.content
     return {
         "rephrased_query": rephrased_query,
         "relevant_chunks": [c["text"] for c in most_relevant_chunks],
+        "prompt": get_answer_formatted_prompt,
         "answer": get_answer_res.content,
     }
 

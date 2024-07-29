@@ -1,5 +1,6 @@
 import streamlit as st
 from app_utils import ask_legal_assistant
+from prompts import default_qa_prompt
 
 
 if "messages" not in st.session_state:
@@ -18,6 +19,12 @@ body, html {
 </style>
 """, unsafe_allow_html=True)
 
+with st.expander("Custom Prompt"):
+    custom_prompt = st.text_area(
+        "Custom Prompt",
+        default_qa_prompt
+    )
+
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
@@ -30,8 +37,8 @@ if user_input := st.chat_input("הקלד את השאלה שלך"):
     st.session_state.messages.append({"role": "human", "content": user_input})
     # print(st.session_state.messages[0:-1])
     # print(st.session_state.messages[-1])
-    response = ask_legal_assistant(
-        st.session_state.messages[-1]["content"], st.session_state.messages[0:-1])
+    response = ask_legal_assistant(st.session_state.messages[-1]["content"], st.session_state.messages[0:-1], custom_prompt)
+    
     # Display assistant response in chat message container
     with st.chat_message("ai"):
         st.markdown(response["answer"])
