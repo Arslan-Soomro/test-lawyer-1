@@ -7,6 +7,7 @@ import tiktoken
 from dotenv import load_dotenv, dotenv_values
 load_dotenv()
 
+pinecone_base_url="https://kb-cen1257.svc.aped-4627-b74a.pinecone.io" # https://kb2-cen1257.svc.aped-4627-b74a.pinecone.io
 
 def clean_text(text):
 
@@ -99,7 +100,7 @@ def upsert_to_pinecone(vectors, namespace, max_list_length=100):
                 "Please provide a namespace for upserting to Pinecone.")
 
         pinecone_api_key = os.getenv("PINECONE_API_KEY")
-        pinecone_api_url = "https://kb2-cen1257.svc.aped-4627-b74a.pinecone.io/vectors/upsert"
+        pinecone_api_url = f"{pinecone_base_url}/vectors/upsert"
         # batches_num = math.ceil(len(vectors) / max_list_length)
 
         for i in range(0, len(vectors), max_list_length):
@@ -143,7 +144,7 @@ def embed_and_upsert(texts, namespace):
 
 def reset_pinecone(namespace):
     pinecone_api_key = os.getenv("PINECONE_API_KEY")
-    pinecone_api_url = "https://kb2-cen1257.svc.aped-4627-b74a.pinecone.io/vectors/delete"
+    pinecone_api_url = f"{pinecone_base_url}/vectors/delete"
     response = requests.post(
         pinecone_api_url,
         headers={
@@ -161,7 +162,7 @@ def reset_pinecone(namespace):
 
 def get_relevant_chunks(text, namespace, top_k=10, only_text=False):
     pinecone_api_key = os.getenv("PINECONE_API_KEY")
-    pinecone_api_url = "https://kb2-cen1257.svc.aped-4627-b74a.pinecone.io/query"
+    pinecone_api_url = f"{pinecone_base_url}/query"
     embeddings = generate_embeddings([text])
 
     response = requests.post(
