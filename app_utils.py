@@ -5,7 +5,7 @@ from utils import get_relevant_chunks, rerank_chunks, print_chunks
 
 def ask_legal_assistant(query, chat_history, qa_prompt):
     model = ChatAnthropic(model="claude-3-sonnet-20240229")
-    pinecone_namespace = "simple-rag-2-he"
+    pinecone_namespace = "admin" # "simple-rag-2-he"
 
     # Repharse query as a standalone question
     repharse_query_template = [
@@ -26,7 +26,7 @@ def ask_legal_assistant(query, chat_history, qa_prompt):
     relevant_chunks_text = [item["metadata"]["text"]
                             for item in relevant_chunks]
     rerank_results = rerank_chunks(query, relevant_chunks_text)
-    most_relevant_chunks = rerank_results[0:3]
+    most_relevant_chunks = rerank_results[0:5]
     relevant_chunks_text = "\n----------------------\n".join(
         [c["text"] for c in most_relevant_chunks])
     # print_chunks(most_relevant_chunks, True)
